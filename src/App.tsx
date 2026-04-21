@@ -268,10 +268,10 @@ function App() {
   const handleShare = async () => {
     if (!question || !canvasRef.current) return;
     try {
-      // Create canvas for combined image
+      // Create canvas for combined image (taller to fit QR and header)
       const canvas = document.createElement('canvas');
       canvas.width = 700;
-      canvas.height = 480;
+      canvas.height = 550;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
@@ -279,32 +279,38 @@ function App() {
       ctx.fillStyle = '#0f0f23';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Copy existing K-line chart from canvas
+      // Header with cewang.ai
+      ctx.fillStyle = '#e94560';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('cewang.ai', canvas.width / 2, 35);
+
+      // K-line chart area (starts at y=50)
       const klineCanvas = canvasRef.current;
-      ctx.drawImage(klineCanvas, 0, 0);
+      ctx.drawImage(klineCanvas, 0, 50, 700, 300);
 
       // Bottom panel - game results
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 310, canvas.width, 170);
+      ctx.fillRect(0, 360, canvas.width, 190);
       ctx.strokeStyle = '#16213e';
       ctx.lineWidth = 2;
-      ctx.strokeRect(0, 310, canvas.width, 170);
+      ctx.strokeRect(0, 360, canvas.width, 190);
 
       // Stock info
       ctx.fillStyle = '#8b8b9e';
       ctx.font = '10px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`股票: ${question.stock_code} ${question.stock_name}    时间: ${question.candles[0].date} ~ ${question.candles[9].date}`, canvas.width / 2, 340);
+      ctx.fillText(`股票: ${question.stock_code} ${question.stock_name}    时间: ${question.candles[0].date} ~ ${question.candles[9].date}`, canvas.width / 2, 390);
 
       // Score
       ctx.fillStyle = winRate > 0.5 ? '#ff0000' : '#00ff00';
       ctx.font = 'bold 24px Arial';
-      ctx.fillText(`您的战绩: ${score}/5 (${(winRate * 100).toFixed(0)}%)`, canvas.width / 2, 380);
+      ctx.fillText(`您的战绩: ${score}/5 (${(winRate * 100).toFixed(0)}%)`, canvas.width / 2, 430);
 
       // Message
       ctx.fillStyle = '#eaeaea';
       ctx.font = '14px Arial';
-      ctx.fillText(msg.message, canvas.width / 2, 410);
+      ctx.fillText(msg.message, canvas.width / 2, 460);
 
       // QR Code
       const qrDataUrl = await QRCode.toDataURL('https://cewang.ai', {
@@ -317,12 +323,12 @@ function App() {
       await new Promise<void>((resolve) => {
         qrImg.onload = () => resolve();
       });
-      ctx.drawImage(qrImg, canvas.width / 2 - 40, 420, 80, 80);
+      ctx.drawImage(qrImg, canvas.width / 2 - 40, 470, 80, 80);
 
       // QR label
       ctx.fillStyle = '#8b8b9e';
       ctx.font = '10px Arial';
-      ctx.fillText('扫码挑战 https://cewang.ai', canvas.width / 2, 520);
+      ctx.fillText('扫码挑战', canvas.width / 2, 560);
 
       // Try Web Share API first (works better on mobile)
       const blob = await new Promise<Blob>((resolve) => {
@@ -416,7 +422,7 @@ function App() {
               <div style={{ fontSize: '10px', color: COLORS.textMuted, marginBottom: '10px', fontFamily: '"Zpix", "Press Start 2P"' }}>股票: {question.stock_code} {question.stock_name}</div>
               <div style={{ fontSize: '10px', color: COLORS.textMuted, marginBottom: '20px', fontFamily: '"Zpix", "Press Start 2P"' }}>时间: {question.candles[0].date} ~ {question.candles[9].date}</div>
 
-              <div style={{ fontSize: '16px', color: winRate >= 0.6 ? COLORS.success : winRate >= 0.4 ? COLORS.flatColor : COLORS.error, marginBottom: '15px', fontFamily: '"Zpix", "Press Start 2P"' }}>
+              <div style={{ fontSize: '16px', color: winRate > 0.5 ? COLORS.error : COLORS.success, marginBottom: '15px', fontFamily: '"Zpix", "Press Start 2P"' }}>
                 您的战绩: {score}/5 ({(winRate * 100).toFixed(0)}%)
               </div>
 
