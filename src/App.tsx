@@ -29,6 +29,7 @@ const MESSAGES = [
 ];
 
 function App() {
+  const [fontsReady, setFontsReady] = useState(false);
   const [question, setQuestion] = useState<KlineGameResponse | null>(null);
   const [gameState, setGameState] = useState<GameState>('loading');
   const [guessResults, setGuessResults] = useState<(GuessResult | null)[]>(Array(5).fill(null));
@@ -36,6 +37,22 @@ function App() {
   const [score, setScore] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestIdRef = useRef(0);
+
+  // Preload pixel font before anything else
+  useEffect(() => {
+    const loadFont = async () => {
+      try {
+        const font = new FontFace('Zpix', 'url(/fonts/zpix.ttf)');
+        await font.load();
+        document.fonts.add(font);
+        setFontsReady(true);
+      } catch (e) {
+        console.error('Font load failed:', e);
+        setFontsReady(true); // Continue anyway
+      }
+    };
+    loadFont();
+  }, []);
 
   const guessedCount = guessResults.filter((r) => r !== null).length;
   const winRate = guessedCount > 0 ? score / guessedCount : 0;
@@ -247,6 +264,13 @@ function App() {
     }
   }, []);
 
+  // Load question once fonts are ready
+  useEffect(() => {
+    if (fontsReady) {
+      loadQuestion();
+    }
+  }, [fontsReady, loadQuestion]);
+
   const handleGuess = (pick: 'up' | 'down') => {
     if (!question || guessResults[currentIndex] !== null || gameState !== 'playing') return;
     // K6-K10 are at candles[5]-[9], currentIndex 0-4 maps to candles[5]-[9]
@@ -371,8 +395,10 @@ function App() {
   };
 
   useEffect(() => {
-    loadQuestion();
-  }, [loadQuestion]);
+    if (fontsReady) {
+      loadQuestion();
+    }
+  }, [fontsReady, loadQuestion]);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: COLORS.background, color: COLORS.text, fontFamily: '"Zpix", "Press Start 2P", monospace' }}>
