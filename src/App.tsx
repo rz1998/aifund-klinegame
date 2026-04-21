@@ -146,17 +146,8 @@ function App() {
         }
       }
 
-      // Question mark for unrevealed future candles
-      for (let i = visibleCount; i < 5; i++) {
-        const x = chartPadding + i * totalCandleWidth + candleWidth / 2;
-        ctx.fillStyle = COLORS.textMuted;
-        ctx.font = '16px "Press Start 2P"';
-        ctx.textAlign = 'center';
-        ctx.fillText('?', x, chartTop + chartHeight / 2 + 6);
-      }
-
-      // Future candles (after 5) as question marks
-      for (let i = 5; i < q.candles.length; i++) {
+      // Question marks for unrevealed candles (K6-K10)
+      for (let i = 5; i < 10; i++) {
         const x = chartPadding + i * totalCandleWidth + candleWidth / 2;
         ctx.fillStyle = COLORS.textMuted;
         ctx.font = '16px "Press Start 2P"';
@@ -172,7 +163,7 @@ function App() {
       const id = ++requestIdRef.current;
       setTimeout(() => {
         if (id !== requestIdRef.current) return;
-        drawKline(question, currentIndex + 1, guessResults);
+        drawKline(question, 5 + guessedCount, guessResults);
       }, 100);
     }
   }, [question, currentIndex, guessResults, gameState, drawKline]);
