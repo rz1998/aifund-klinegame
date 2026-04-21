@@ -193,7 +193,8 @@ function App() {
 
   const handleGuess = (pick: 'up' | 'down') => {
     if (!question || guessResults[currentIndex] !== null || gameState !== 'playing') return;
-    const c = question.candles[currentIndex];
+    // K6-K10 are at candles[5]-[9], currentIndex 0-4 maps to candles[5]-[9]
+    const c = question.candles[5 + currentIndex];
     const actualUp = c.close >= c.open;
     const correct = pick === (actualUp ? 'up' : 'down');
     const newResults = [...guessResults];
