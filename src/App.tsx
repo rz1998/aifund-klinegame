@@ -268,55 +268,66 @@ function App() {
   const handleShare = async () => {
     if (!question || !canvasRef.current) return;
     try {
-      // Create canvas for combined image (phone ratio 9:16)
+      // Load pixel font for canvas
+      const pixelFont = new FontFace('Zpix', 'url(/fonts/zpix.ttf)');
+      await pixelFont.load();
+      document.fonts.add(pixelFont);
+
+      // Create high-res canvas for combined image (2x for retina quality)
+      const scale = 2;
       const canvas = document.createElement('canvas');
-      canvas.width = 540;
-      canvas.height = 960; // 9:16 ratio
+      canvas.width = 540 * scale;
+      canvas.height = 960 * scale;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      ctx.scale(scale, scale);
 
       // Background
       ctx.fillStyle = '#0f0f23';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, 540, 960);
 
       // Header with cewang.ai
       ctx.fillStyle = '#e94560';
-      ctx.font = 'bold 32px Arial';
+      ctx.font = 'bold 28px Zpix';
       ctx.textAlign = 'center';
-      ctx.fillText('cewang.ai', canvas.width / 2, 50);
+      ctx.fillText('cewang.ai', 270, 45);
 
-      // K-line chart area
+      // K-line chart area - keep original aspect ratio (700:300 = 7:3)
       const klineCanvas = canvasRef.current;
-      ctx.drawImage(klineCanvas, 20, 70, 500, 500);
+      const chartX = 20;
+      const chartY = 60;
+      const chartW = 500;
+      const chartH = Math.round(chartW * (300 / 700)); // maintain 7:3 ratio
+      ctx.drawImage(klineCanvas, chartX, chartY, chartW, chartH);
 
       // Bottom panel - game results
-      const panelY = 590;
+      const panelY = chartY + chartH + 15;
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, panelY, canvas.width, 370);
+      ctx.fillRect(0, panelY, 540, 960 - panelY);
       ctx.strokeStyle = '#16213e';
       ctx.lineWidth = 2;
-      ctx.strokeRect(0, panelY, canvas.width, 370);
+      ctx.strokeRect(0, panelY, 540, 960 - panelY);
 
       // Stock info
       ctx.fillStyle = '#8b8b9e';
-      ctx.font = '12px Arial';
+      ctx.font = '11px Zpix';
       ctx.textAlign = 'center';
-      ctx.fillText(`${question.stock_code} ${question.stock_name}`, canvas.width / 2, panelY + 35);
-      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, canvas.width / 2, panelY + 60);
+      ctx.fillText(`${question.stock_code} ${question.stock_name}`, 270, panelY + 30);
+      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, 270, panelY + 52);
 
       // Score
       ctx.fillStyle = winRate > 0.5 ? '#ff0000' : '#00ff00';
-      ctx.font = 'bold 36px Arial';
-      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, canvas.width / 2, panelY + 130);
+      ctx.font = 'bold 32px Zpix';
+      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, 270, panelY + 110);
 
       // Message
       ctx.fillStyle = '#eaeaea';
-      ctx.font = '18px Arial';
-      ctx.fillText(msg.message, canvas.width / 2, panelY + 175);
+      ctx.font = '16px Zpix';
+      ctx.fillText(msg.message, 270, panelY + 150);
 
       // QR Code
       const qrDataUrl = await QRCode.toDataURL('https://cewang.ai', {
-        width: 100,
+        width: 80 * scale,
         margin: 1,
         color: { dark: '#eaeaea', light: '#0f0f23' }
       });
@@ -325,12 +336,12 @@ function App() {
       await new Promise<void>((resolve) => {
         qrImg.onload = () => resolve();
       });
-      ctx.drawImage(qrImg, canvas.width / 2 - 50, panelY + 200, 100, 100);
+      ctx.drawImage(qrImg, 270 - 50, panelY + 170, 100, 100);
 
       // QR label
       ctx.fillStyle = '#8b8b9e';
-      ctx.font = '12px Arial';
-      ctx.fillText('扫码挑战', canvas.width / 2, panelY + 325);
+      ctx.font = '10px Zpix';
+      ctx.fillText('扫码挑战', 270, panelY + 295);
 
       // Try Web Share API first (works better on mobile)
       const blob = await new Promise<Blob>((resolve) => {
