@@ -74,7 +74,8 @@ function App() {
       const chartHeight = height - 80;
       const chartTop = 40;
 
-      const visibleCount = Math.min(revealed, q.candles.length);
+      // 始终至少显示5根已知K线，最多显示10根
+      const visibleCount = Math.max(5, Math.min(revealed, q.candles.length));
       const prices: number[] = [];
       for (let i = 0; i < visibleCount; i++) {
         const c = q.candles[i];
@@ -146,13 +147,15 @@ function App() {
         }
       }
 
-      // Question marks for unrevealed candles (K6-K10)
+      // Question marks for unrevealed candles (K6-K10 that haven't been guessed yet)
       for (let i = 5; i < 10; i++) {
-        const x = chartPadding + i * totalCandleWidth + candleWidth / 2;
-        ctx.fillStyle = COLORS.textMuted;
-        ctx.font = '16px "Press Start 2P"';
-        ctx.textAlign = 'center';
-        ctx.fillText('?', x, chartTop + chartHeight / 2 + 6);
+        if (i >= 5 + guessedCount) {
+          const x = chartPadding + i * totalCandleWidth + candleWidth / 2;
+          ctx.fillStyle = COLORS.textMuted;
+          ctx.font = '16px "Press Start 2P"';
+          ctx.textAlign = 'center';
+          ctx.fillText('?', x, chartTop + chartHeight / 2 + 6);
+        }
       }
     },
     []
@@ -228,7 +231,8 @@ function App() {
 
         {gameState === 'error' && (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <div style={{ fontSize: '10px', color: COLORS.error, animation: 'blink 1s infinite', fontFamily: '"Zpix", "Press Start 2P"' }}>加载失败，正在重试...</div>
+            <div style={{ fontSize: '10px', color: COLORS.error, animation: 'blink 1s infinite', fontFamily: '"Zpix", "Press Start 2P"', marginBottom: '20px' }}>加载失败，请检查网络后重试</div>
+            <button onClick={loadQuestion} style={{ padding: '15px 30px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: COLORS.accent, border: `3px solid ${COLORS.accent}`, color: COLORS.text, cursor: 'pointer' }}>重新加载</button>
           </div>
         )}
 
