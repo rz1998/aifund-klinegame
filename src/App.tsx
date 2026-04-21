@@ -19,12 +19,12 @@ const COLORS = {
 type GameState = 'loading' | 'playing' | 'finished' | 'error';
 
 const MESSAGES = [
-  { min: 0, message: '📉 糟糕透了，继续加油！' },
-  { min: 20, message: '🙁 还需要学习 K 线知识' },
-  { min: 40, message: '😐 勉强及格，再接再厉' },
-  { min: 60, message: '🙂 还不错！继续挑战' },
-  { min: 80, message: '😊 太棒了！你很厉害！' },
-  { min: 100, message: '🎉 完美！你是 K 线大师！' },
+  { min: 0, message: '全军覆没...要不要再来一局？ 😢' },
+  { min: 20, message: '运气不太好，再试一次？ 😅' },
+  { min: 40, message: '再接再厉！ 💪' },
+  { min: 60, message: '还不错，继续加油！ 🏆' },
+  { min: 80, message: '祝贺！身手不凡！ 🏆🏆' },
+  { min: 100, message: '完美！你是量化之神！ 🏆🏆🏆' },
 ];
 
 function App() {
