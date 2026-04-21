@@ -340,12 +340,13 @@ function App() {
       }
 
       // Layout constants
-      const marginX = 10;
+      const marginX = 5;
       const headerH = 35;
-      const chartW = 520;
+      const chartW = 530;
       const chartH = Math.round(chartW * (300 / 700)); // maintain 7:3 ratio
       const gap = 8;
       const panelH = 180;
+      const totalW = 540;
 
       // Calculate total height
       const totalH = headerH + gap + chartH + gap + panelH;
@@ -353,7 +354,7 @@ function App() {
       // Create high-res canvas (2x for retina quality)
       const scale = 2;
       const canvas = document.createElement('canvas');
-      canvas.width = 540 * scale;
+      canvas.width = totalW * scale;
       canvas.height = totalH * scale;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
@@ -364,13 +365,13 @@ function App() {
 
       // Background
       ctx.fillStyle = '#0f0f23';
-      ctx.fillRect(0, 0, 540, totalH);
+      ctx.fillRect(0, 0, totalW, totalH);
 
       // Header with cewang.ai
       ctx.fillStyle = '#e94560';
       ctx.font = 'bold 24px Zpix';
       ctx.textAlign = 'center';
-      ctx.fillText('cewang.ai', 270, 30);
+      ctx.fillText('cewang.ai', totalW / 2, 28);
 
       // K-line chart area
       const chartY = headerH + gap;
@@ -380,27 +381,27 @@ function App() {
       // Bottom panel - game results
       const panelY = chartY + chartH + gap;
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, panelY, 540, panelH);
+      ctx.fillRect(0, panelY, totalW, panelH);
       ctx.strokeStyle = '#16213e';
       ctx.lineWidth = 2;
-      ctx.strokeRect(0, panelY, 540, panelH);
+      ctx.strokeRect(0, panelY, totalW, panelH);
 
       // Stock info
       ctx.fillStyle = '#8b8b9e';
       ctx.font = '10px Zpix';
       ctx.textAlign = 'center';
-      ctx.fillText(`${question.stock_code} ${question.stock_name}`, 270, panelY + 22);
-      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, 270, panelY + 40);
+      ctx.fillText(`${question.stock_code} ${question.stock_name}`, totalW / 2, panelY + 22);
+      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, totalW / 2, panelY + 40);
 
       // Score
       ctx.fillStyle = winRate > 0.5 ? '#ff0000' : '#00ff00';
       ctx.font = 'bold 26px Zpix';
-      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, 270, panelY + 75);
+      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, totalW / 2, panelY + 75);
 
       // Message
       ctx.fillStyle = '#eaeaea';
       ctx.font = '13px Zpix';
-      ctx.fillText(msg.message, 270, panelY + 105);
+      ctx.fillText(msg.message, totalW / 2, panelY + 105);
 
       // QR Code
       const qrDataUrl = await QRCode.toDataURL('https://cewang.ai', {
@@ -413,12 +414,12 @@ function App() {
       await new Promise<void>((resolve) => {
         qrImg.onload = () => resolve();
       });
-      ctx.drawImage(qrImg, 270 - 30, panelY + 120, 60, 60);
+      ctx.drawImage(qrImg, totalW / 2 - 30, panelY + 120, 60, 60);
 
       // QR label
       ctx.fillStyle = '#8b8b9e';
       ctx.font = '10px Zpix';
-      ctx.fillText('扫码挑战', 270, panelY + 195);
+      ctx.fillText('扫码挑战', totalW / 2, panelY + 195);
 
       // Try Web Share API first (works better on mobile)
       const blob = await new Promise<Blob>((resolve) => {
