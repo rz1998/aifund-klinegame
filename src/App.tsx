@@ -49,7 +49,7 @@ function App() {
   const msg = getMessage(winRate);
 
   const drawKline = useCallback(
-    (q: KlineGameResponse, revealed: number, guessed: (GuessResult | null)[]) => {
+    (q: KlineGameResponse, guessed: (GuessResult | null)[]) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -70,14 +70,16 @@ function App() {
       const candleWidth = 24;
       const candleGap = 8;
       const totalCandleWidth = candleWidth + candleGap;
-      const chartPadding = 40;
       const chartHeight = height - 80;
       const chartTop = 40;
+      const totalCandles = 10;
+      // 图表固定宽度，10根K线均匀分布
+      const chartContentWidth = totalCandles * totalCandleWidth;
+      const startX = (width - chartContentWidth) / 2;
 
-      // 始终至少显示5根已知K线，最多显示10根
-      const visibleCount = Math.max(5, Math.min(revealed, q.candles.length));
+      // K1-K5 已知，K6-K10 待猜，但价格范围只基于已揭示的
       const prices: number[] = [];
-      for (let i = 0; i < visibleCount; i++) {
+      for (let i = 0; i < 5; i++) {
         const c = q.candles[i];
         prices.push(c.high, c.low);
       }
@@ -94,8 +96,8 @@ function App() {
       for (let i = 0; i <= 4; i++) {
         const y = chartTop + (chartHeight / 4) * i;
         ctx.beginPath();
-        ctx.moveTo(chartPadding, y);
-        ctx.lineTo(width - 20, y);
+        ctx.moveTo(startX - 5, y);
+        ctx.lineTo(startX + chartContentWidth + 5, y);
         ctx.stroke();
       }
 
@@ -106,55 +108,89 @@ function App() {
       for (let i = 0; i <= 4; i++) {
         const price = minPrice + (priceRange / 4) * (4 - i);
         const y = chartTop + (chartHeight / 4) * i;
-        ctx.fillText(price.toFixed(2), chartPadding - 5, y + 4);
+        ctx.fillText(price.toFixed(2), startX - 10, y + 4);
       }
 
-      // Draw candles
-      for (let i = 0; i < visibleCount; i++) {
-        const c = q.candles[i];
-        const x = chartPadding + i * totalCandleWidth + candleWidth / 2;
-        const isUp = c.close >= c.open;
-        const color = isUp ? upColor : downColor;
+      // Draw all 10 candle positions
+      for (let i = 0; i < 10; i++) {
+        const x = startX + i * totalCandleWidth + candleWidth / 2;
 
-        // Wick
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(x, priceToY(c.high));
-        ctx.lineTo(x, priceToY(c.low));
-        ctx.stroke();
-
-        // Body
-        const bodyTop = priceToY(Math.max(c.open, c.close));
-        const bodyHeight = Math.max(1, Math.abs(priceToY(c.open) - priceToY(c.close)));
-        ctx.fillStyle = color;
-        ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
-
-        // K label
         if (i < 5) {
-          ctx.fillStyle = guessedCount > i ? COLORS.text : COLORS.textMuted;
+          // K1-K5: 已知K线
+          const c = q.candles[i];
+          const isUp = c.close >= c.open;
+          const color = isUp ? upColor : downColor;
+
+          // Wick
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, priceToY(c.high));
+          ctx.lineTo(x, priceToY(c.low));
+          ctx.stroke();
+
+          // Body
+          const bodyTop = priceToY(Math.max(c.open, c.close));
+          const bodyHeight = Math.max(1, Math.abs(priceToY(c.open) - priceToY(c.close)));
+          ctx.fillStyle = color;
+          ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+
+          // K label (K1-K10 全部显示)
+          ctx.fillStyle = COLORS.text;
           ctx.font = '8px "Press Start 2P"';
           ctx.textAlign = 'center';
           ctx.fillText(`K${i + 1}`, x, height - 15);
-        }
 
-        // Guess result marker
-        if (guessedCount > i && guessed[i]) {
-          const result = guessed[i]!;
-          ctx.fillStyle = result.correct ? COLORS.success : COLORS.error;
-          ctx.font = '10px "Press Start 2P"';
-          ctx.fillText(result.correct ? '✓' : '✗', x, chartTop - 10);
-        }
-      }
+        } else {
+          // K6-K10: 待猜位置
+          const guessedIndex = i - 5; // 0-4 for guessResults
 
-      // Question marks for unrevealed candles (K6-K10 that haven't been guessed yet)
-      for (let i = 5; i < 10; i++) {
-        if (i >= 5 + guessedCount) {
-          const x = chartPadding + i * totalCandleWidth + candleWidth / 2;
-          ctx.fillStyle = COLORS.textMuted;
-          ctx.font = '16px "Press Start 2P"';
-          ctx.textAlign = 'center';
-          ctx.fillText('?', x, chartTop + chartHeight / 2 + 6);
+          if (guessedIndex < guessedCount) {
+            // 已猜测：显示结果K线 + ✓/✗
+            const c = q.candles[i];
+            const isUp = c.close >= c.open;
+            const color = isUp ? upColor : downColor;
+
+            // Wick
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x, priceToY(c.high));
+            ctx.lineTo(x, priceToY(c.low));
+            ctx.stroke();
+
+            // Body
+            const bodyTop = priceToY(Math.max(c.open, c.close));
+            const bodyHeight = Math.max(1, Math.abs(priceToY(c.open) - priceToY(c.close)));
+            ctx.fillStyle = color;
+            ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
+
+            // K label
+            ctx.fillStyle = COLORS.text;
+            ctx.font = '8px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText(`K${i + 1}`, x, height - 15);
+
+            // Guess result marker
+            if (guessed[guessedIndex]) {
+              const result = guessed[guessedIndex]!;
+              ctx.fillStyle = result.correct ? COLORS.success : COLORS.error;
+              ctx.font = '10px "Press Start 2P"';
+              ctx.fillText(result.correct ? '✓' : '✗', x, chartTop - 10);
+            }
+          } else {
+            // 未猜测：显示问号
+            ctx.fillStyle = COLORS.textMuted;
+            ctx.font = '16px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText('?', x, chartTop + chartHeight / 2 + 6);
+
+            // K label
+            ctx.fillStyle = COLORS.textMuted;
+            ctx.font = '8px "Press Start 2P"';
+            ctx.textAlign = 'center';
+            ctx.fillText(`K${i + 1}`, x, height - 15);
+          }
         }
       }
     },
@@ -166,14 +202,14 @@ function App() {
       const id = ++requestIdRef.current;
       setTimeout(() => {
         if (id !== requestIdRef.current) return;
-        drawKline(question, 5 + guessedCount, guessResults);
+        drawKline(question, guessResults);
       }, 100);
     }
   }, [question, currentIndex, guessResults, gameState, drawKline]);
 
   useEffect(() => {
     if (question && gameState === 'finished') {
-      drawKline(question, 10, guessResults);
+      drawKline(question, guessResults);
     }
   }, [question, gameState, guessResults, drawKline]);
 
