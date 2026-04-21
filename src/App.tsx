@@ -222,6 +222,17 @@ function App() {
     }
   }, [question, gameState, guessResults, drawKline]);
 
+  // Redraw canvas when page becomes visible again (tab switch fix)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && question && (gameState === 'playing' || gameState === 'finished')) {
+        drawKline(question, guessResults);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [question, guessResults, gameState, drawKline]);
+
   const loadQuestion = useCallback(async () => {
     setGameState('loading');
     setGuessResults(Array(5).fill(null));
