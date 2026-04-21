@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { fetchRandomKline } from './services/api';
 import type { KlineGameResponse, GuessResult } from './services/api';
+import QRCode from 'qrcode';
 
 const COLORS = {
   background: '#0f0f23',
@@ -253,6 +254,99 @@ function App() {
     }
   };
 
+  const handleShare = async () => {
+    if (!question) return;
+    try {
+      // Create a canvas for the share image
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 500;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Background
+      ctx.fillStyle = '#0f0f23';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Title
+      ctx.fillStyle = '#e94560';
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('📊 K线竞彩战绩', canvas.width / 2, 50);
+
+      // Stock info
+      ctx.fillStyle = '#8b8b9e';
+      ctx.font = '16px Arial';
+      ctx.fillText(`股票: ${question.stock_code} ${question.stock_name}`, canvas.width / 2, 100);
+      ctx.fillText(`时间: ${question.candles[0].date} ~ ${question.candles[9].date}`, canvas.width / 2, 130);
+
+      // Score
+      ctx.fillStyle = winRate >= 0.6 ? '#00ff00' : winRate >= 0.4 ? '#888888' : '#ff4444';
+      ctx.font = 'bold 36px Arial';
+      ctx.fillText(`您的战绩: ${score}/5 (${(winRate * 100).toFixed(0)}%)`, canvas.width / 2, 200);
+
+      // Message
+      ctx.fillStyle = '#eaeaea';
+      ctx.font = '20px Arial';
+      ctx.fillText(msg.message, canvas.width / 2, 260);
+
+      // Draw K-line results mini chart
+      const chartStartX = 80;
+      const chartY = 340;
+      const candleW = 24;
+      const candleGap = 8;
+      for (let i = 0; i < 5; i++) {
+        const x = chartStartX + i * (candleW + candleGap) + candleW / 2;
+        const result = guessResults[i];
+        if (result) {
+          // Draw mini candle
+          const isUp = result.actualUp;
+          ctx.fillStyle = isUp ? '#ff0000' : '#00ff00';
+          ctx.fillRect(x - candleW / 2, chartY, candleW, 30);
+          // Draw result marker
+          ctx.fillStyle = result.correct ? '#00ff00' : '#ff4444';
+          ctx.font = '14px Arial';
+          ctx.fillText(result.correct ? '✓' : '✗', x, chartY - 10);
+        }
+      }
+      // Labels
+      ctx.fillStyle = '#8b8b9e';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < 5; i++) {
+        const x = chartStartX + i * (candleW + candleGap) + candleW / 2;
+        ctx.fillText(`K${i + 6}`, x, chartY + 55);
+      }
+
+      // QR Code
+      const qrDataUrl = await QRCode.toDataURL('https://cewang.ai/kline-game', {
+        width: 100,
+        margin: 1,
+        color: { dark: '#eaeaea', light: '#0f0f23' }
+      });
+      const qrImg = new Image();
+      qrImg.src = qrDataUrl;
+      await new Promise<void>((resolve) => {
+        qrImg.onload = () => resolve();
+      });
+      ctx.drawImage(qrImg, canvas.width / 2 - 50, 400, 100, 100);
+
+      // QR label
+      ctx.fillStyle = '#8b8b9e';
+      ctx.font = '12px Arial';
+      ctx.fillText('扫码挑战', canvas.width / 2, 520);
+
+      // Download
+      const link = document.createElement('a');
+      link.download = `kline-game-${question.stock_code}-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Share failed:', err);
+      alert('分享图片生成失败，请重试');
+    }
+  };
+
   useEffect(() => {
     loadQuestion();
   }, [loadQuestion]);
@@ -327,7 +421,7 @@ function App() {
 
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
               <button onClick={loadQuestion} style={{ flex: 1, maxWidth: '200px', padding: '15px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: COLORS.accent, border: `3px solid ${COLORS.accent}`, color: COLORS.text, cursor: 'pointer' }}>再玩一次</button>
-              <button onClick={() => { const text = `📊 K线竞彩战绩\n股票: ${question.stock_code} ${question.stock_name}\n时间: ${question.candles[0].date} ~ ${question.candles[9].date}\n胜率: ${score}/5 (${(winRate * 100).toFixed(0)}%)\n评价: ${msg.message}\n👉 点击挑战: http://8.151.136.102/kline-game`; navigator.clipboard.writeText(text).then(() => alert('战绩已复制！')) }} style={{ flex: 1, maxWidth: '200px', padding: '15px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: 'transparent', border: `3px solid ${COLORS.textMuted}`, color: COLORS.text, cursor: 'pointer' }}>分享战绩</button>
+              <button onClick={handleShare} style={{ flex: 1, maxWidth: '200px', padding: '15px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: 'transparent', border: `3px solid ${COLORS.textMuted}`, color: COLORS.text, cursor: 'pointer' }}>分享战绩</button>
             </div>
           </>
         )}
