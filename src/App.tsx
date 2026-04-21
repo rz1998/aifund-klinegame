@@ -341,7 +341,7 @@ function App() {
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'K线竞彩战绩',
+          title: '竞猜战绩',
           text: `我的战绩: ${score}/5 (${(winRate * 100).toFixed(0)}%) - ${msg.message}`
         });
       } else {
@@ -366,7 +366,7 @@ function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: COLORS.background, color: COLORS.text, fontFamily: '"Zpix", "Press Start 2P", monospace' }}>
       <header style={{ padding: '20px', textAlign: 'center', borderBottom: `3px solid ${COLORS.border}`, boxShadow: `0 0 20px ${COLORS.border}40` }}>
-        <h1 style={{ fontSize: '16px', color: COLORS.accent, textShadow: `0 0 10px ${COLORS.accent}`, fontFamily: '"Zpix", "Press Start 2P"' }}>K线竞彩</h1>
+        <h1 style={{ fontSize: '16px', color: COLORS.accent, textShadow: `0 0 10px ${COLORS.accent}`, fontFamily: '"Zpix", "Press Start 2P"' }}>竞猜</h1>
       </header>
 
       <main style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
