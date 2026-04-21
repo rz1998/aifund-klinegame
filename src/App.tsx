@@ -304,12 +304,12 @@ function App() {
       }
 
       // Layout constants
-      const marginX = 20;
-      const headerH = 40;
-      const chartW = 500;
+      const marginX = 10;
+      const headerH = 35;
+      const chartW = 520;
       const chartH = Math.round(chartW * (300 / 700)); // maintain 7:3 ratio
-      const gap = 10;
-      const panelH = 200;
+      const gap = 8;
+      const panelH = 180;
 
       // Calculate total height
       const totalH = headerH + gap + chartH + gap + panelH;
@@ -353,22 +353,22 @@ function App() {
       ctx.fillStyle = '#8b8b9e';
       ctx.font = '10px Zpix';
       ctx.textAlign = 'center';
-      ctx.fillText(`${question.stock_code} ${question.stock_name}`, 270, panelY + 25);
-      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, 270, panelY + 45);
+      ctx.fillText(`${question.stock_code} ${question.stock_name}`, 270, panelY + 22);
+      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, 270, panelY + 40);
 
       // Score
       ctx.fillStyle = winRate > 0.5 ? '#ff0000' : '#00ff00';
-      ctx.font = 'bold 28px Zpix';
-      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, 270, panelY + 90);
+      ctx.font = 'bold 26px Zpix';
+      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, 270, panelY + 75);
 
       // Message
       ctx.fillStyle = '#eaeaea';
-      ctx.font = '14px Zpix';
-      ctx.fillText(msg.message, 270, panelY + 120);
+      ctx.font = '13px Zpix';
+      ctx.fillText(msg.message, 270, panelY + 105);
 
       // QR Code
       const qrDataUrl = await QRCode.toDataURL('https://cewang.ai', {
-        width: 70 * scale,
+        width: 60 * scale,
         margin: 1,
         color: { dark: '#eaeaea', light: '#0f0f23' }
       });
@@ -377,12 +377,12 @@ function App() {
       await new Promise<void>((resolve) => {
         qrImg.onload = () => resolve();
       });
-      ctx.drawImage(qrImg, 270 - 35, panelY + 135, 70, 70);
+      ctx.drawImage(qrImg, 270 - 30, panelY + 120, 60, 60);
 
       // QR label
       ctx.fillStyle = '#8b8b9e';
       ctx.font = '10px Zpix';
-      ctx.fillText('扫码挑战', 270, panelY + 220);
+      ctx.fillText('扫码挑战', 270, panelY + 195);
 
       // Try Web Share API first (works better on mobile)
       const blob = await new Promise<Blob>((resolve) => {
