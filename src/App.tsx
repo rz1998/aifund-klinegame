@@ -35,6 +35,7 @@ function App() {
   const [guessResults, setGuessResults] = useState<(GuessResult | null)[]>(Array(5).fill(null));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
+  const [isSharing, setIsSharing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestIdRef = useRef(0);
 
@@ -290,12 +291,17 @@ function App() {
   };
 
   const handleShare = async () => {
-    if (!question || !canvasRef.current) return;
+    if (!question || !canvasRef.current || isSharing) return;
+    setIsSharing(true);
     try {
-      // Load pixel font for canvas
-      const pixelFont = new FontFace('Zpix', 'url(/fonts/zpix.ttf)');
-      await pixelFont.load();
-      document.fonts.add(pixelFont);
+      // Use existing font or load if needed
+      let fontLoaded = document.fonts.check('12px Zpix');
+      if (!fontLoaded) {
+        const pixelFont = new FontFace('Zpix', 'url(/fonts/zpix.ttf)');
+        await pixelFont.load();
+        document.fonts.add(pixelFont);
+        fontLoaded = true;
+      }
 
       // Create high-res canvas for combined image (2x for retina quality)
       const scale = 2;
@@ -303,7 +309,10 @@ function App() {
       canvas.width = 540 * scale;
       canvas.height = 960 * scale;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) {
+        setIsSharing(false);
+        return;
+      }
       ctx.scale(scale, scale);
 
       // Background
@@ -386,7 +395,9 @@ function App() {
         link.href = canvas.toDataURL('image/png');
         link.click();
       }
+      setIsSharing(false);
     } catch (err) {
+      setIsSharing(false);
       // User cancelled or share failed - don't show error
       if ((err as Error).name !== 'AbortError') {
         console.error('Share failed:', err);
@@ -470,7 +481,7 @@ function App() {
 
             <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
               <button onClick={loadQuestion} style={{ flex: 1, maxWidth: '200px', padding: '15px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: COLORS.accent, border: `3px solid ${COLORS.accent}`, color: COLORS.text, cursor: 'pointer' }}>再玩一次</button>
-              <button onClick={handleShare} style={{ flex: 1, maxWidth: '200px', padding: '15px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: 'transparent', border: `3px solid ${COLORS.textMuted}`, color: COLORS.text, cursor: 'pointer' }}>分享战绩</button>
+              <button onClick={handleShare} disabled={isSharing} style={{ flex: 1, maxWidth: '200px', padding: '15px', fontSize: '10px', fontFamily: '"Zpix", "Press Start 2P"', backgroundColor: isSharing ? COLORS.cardBg : 'transparent', border: `3px solid ${COLORS.textMuted}`, color: COLORS.text, cursor: isSharing ? 'not-allowed' : 'pointer' }}>{isSharing ? '生成中...' : '分享战绩'}</button>
             </div>
           </>
         )}
