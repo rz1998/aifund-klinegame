@@ -324,14 +324,30 @@ function App() {
       ctx.font = '10px Arial';
       ctx.fillText('扫码挑战 https://cewang.ai', canvas.width / 2, 520);
 
-      // Download
-      const link = document.createElement('a');
-      link.download = `kline-game-${question.stock_code}-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
+      // Try Web Share API first (works better on mobile)
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((b) => resolve(b!), 'image/png');
+      });
+      const file = new File([blob], `kline-game-${question.stock_code}.png`, { type: 'image/png' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'K线竞彩战绩',
+          text: `我的战绩: ${score}/5 (${(winRate * 100).toFixed(0)}%) - ${msg.message}`
+        });
+      } else {
+        // Fallback: download
+        const link = document.createElement('a');
+        link.download = `kline-game-${question.stock_code}-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }
     } catch (err) {
-      console.error('Share failed:', err);
-      alert('分享图片生成失败，请重试');
+      // User cancelled or share failed - don't show error
+      if ((err as Error).name !== 'AbortError') {
+        console.error('Share failed:', err);
+      }
     }
   };
 
