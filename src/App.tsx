@@ -268,10 +268,10 @@ function App() {
   const handleShare = async () => {
     if (!question || !canvasRef.current) return;
     try {
-      // Create canvas for combined image (taller to fit QR and header)
+      // Create canvas for combined image (phone ratio 9:16)
       const canvas = document.createElement('canvas');
-      canvas.width = 700;
-      canvas.height = 550;
+      canvas.width = 540;
+      canvas.height = 960; // 9:16 ratio
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
@@ -281,40 +281,42 @@ function App() {
 
       // Header with cewang.ai
       ctx.fillStyle = '#e94560';
-      ctx.font = 'bold 36px Arial';
+      ctx.font = 'bold 32px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('cewang.ai', canvas.width / 2, 45);
+      ctx.fillText('cewang.ai', canvas.width / 2, 50);
 
-      // K-line chart area (starts at y=55)
+      // K-line chart area
       const klineCanvas = canvasRef.current;
-      ctx.drawImage(klineCanvas, 0, 55, 700, 295);
+      ctx.drawImage(klineCanvas, 20, 70, 500, 500);
 
       // Bottom panel - game results
+      const panelY = 590;
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 360, canvas.width, 190);
+      ctx.fillRect(0, panelY, canvas.width, 370);
       ctx.strokeStyle = '#16213e';
       ctx.lineWidth = 2;
-      ctx.strokeRect(0, 360, canvas.width, 190);
+      ctx.strokeRect(0, panelY, canvas.width, 370);
 
       // Stock info
       ctx.fillStyle = '#8b8b9e';
-      ctx.font = '10px Arial';
+      ctx.font = '12px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`股票: ${question.stock_code} ${question.stock_name}    时间: ${question.candles[0].date} ~ ${question.candles[9].date}`, canvas.width / 2, 390);
+      ctx.fillText(`${question.stock_code} ${question.stock_name}`, canvas.width / 2, panelY + 35);
+      ctx.fillText(`${question.candles[0].date} ~ ${question.candles[9].date}`, canvas.width / 2, panelY + 60);
 
       // Score
       ctx.fillStyle = winRate > 0.5 ? '#ff0000' : '#00ff00';
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText(`您的战绩: ${score}/5 (${(winRate * 100).toFixed(0)}%)`, canvas.width / 2, 430);
+      ctx.font = 'bold 36px Arial';
+      ctx.fillText(`${score}/5 (${(winRate * 100).toFixed(0)}%)`, canvas.width / 2, panelY + 130);
 
       // Message
       ctx.fillStyle = '#eaeaea';
-      ctx.font = '14px Arial';
-      ctx.fillText(msg.message, canvas.width / 2, 460);
+      ctx.font = '18px Arial';
+      ctx.fillText(msg.message, canvas.width / 2, panelY + 175);
 
       // QR Code
       const qrDataUrl = await QRCode.toDataURL('https://cewang.ai', {
-        width: 80,
+        width: 100,
         margin: 1,
         color: { dark: '#eaeaea', light: '#0f0f23' }
       });
@@ -323,12 +325,12 @@ function App() {
       await new Promise<void>((resolve) => {
         qrImg.onload = () => resolve();
       });
-      ctx.drawImage(qrImg, canvas.width / 2 - 40, 470, 80, 80);
+      ctx.drawImage(qrImg, canvas.width / 2 - 50, panelY + 200, 100, 100);
 
       // QR label
       ctx.fillStyle = '#8b8b9e';
-      ctx.font = '10px Arial';
-      ctx.fillText('扫码挑战', canvas.width / 2, 560);
+      ctx.font = '12px Arial';
+      ctx.fillText('扫码挑战', canvas.width / 2, panelY + 325);
 
       // Try Web Share API first (works better on mobile)
       const blob = await new Promise<Blob>((resolve) => {
