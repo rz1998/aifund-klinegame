@@ -56,6 +56,8 @@ function App() {
       if (!ctx) return;
 
       const width = 700;
+      const guessedCount = guessed.filter((r) => r !== null).length;
+      console.log('[DEBUG] drawKline called:', { guessedCount, gameState: 'playing' });
       const height = 300;
       canvas.width = width;
       canvas.height = height;
@@ -77,9 +79,14 @@ function App() {
       const chartContentWidth = totalCandles * totalCandleWidth;
       const startX = (width - chartContentWidth) / 2;
 
-      // K1-K5 已知，K6-K10 待猜，但价格范围只基于已揭示的
+      // 价格范围基于所有已揭示的K线（K1-K5已知 + 已猜测的K6-K10）
       const prices: number[] = [];
       for (let i = 0; i < 5; i++) {
+        const c = q.candles[i];
+        prices.push(c.high, c.low);
+      }
+      // 加入已揭示的K6-K10价格
+      for (let i = 5; i < 5 + guessedCount; i++) {
         const c = q.candles[i];
         prices.push(c.high, c.low);
       }
@@ -235,6 +242,7 @@ function App() {
     const correct = pick === (actualUp ? 'up' : 'down');
     const newResults = [...guessResults];
     newResults[currentIndex] = { correct, up: pick === 'up', actualUp, price: c.close, open: c.open, high: c.high, low: c.low, close: c.close };
+    console.log('[DEBUG] handleGuess:', { pick, correct, currentIndex, guessedCount: guessResults.filter(r => r !== null).length });
     setGuessResults(newResults);
     if (correct) setScore((s) => s + 1);
     if (currentIndex < 4) {
@@ -292,7 +300,7 @@ function App() {
 
             <div style={{ backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.border}`, padding: '15px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.textMuted, fontFamily: '"Zpix", "Press Start 2P"' }}>当前战绩: {score}/{guessedCount}</div>
-              <div style={{ marginTop: '8px', fontSize: '12px', color: score > guessedCount / 2 ? COLORS.success : COLORS.error, fontFamily: '"Zpix", "Press Start 2P"' }}>胜率: {guessedCount > 0 ? Math.round(score / guessedCount * 100) : 0}%</div>
+              <div style={{ marginTop: '8px', fontSize: '12px', color: winRate >= 0.5 ? COLORS.error : COLORS.success, fontFamily: '"Zpix", "Press Start 2P"' }}>胜率: {guessedCount > 0 ? Math.round(score / guessedCount * 100) : 0}%</div>
             </div>
           </>
         )}
