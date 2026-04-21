@@ -281,13 +281,13 @@ function App() {
 
       // Header with cewang.ai
       ctx.fillStyle = '#e94560';
-      ctx.font = 'bold 24px Arial';
+      ctx.font = 'bold 36px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('cewang.ai', canvas.width / 2, 35);
+      ctx.fillText('cewang.ai', canvas.width / 2, 45);
 
-      // K-line chart area (starts at y=50)
+      // K-line chart area (starts at y=55)
       const klineCanvas = canvasRef.current;
-      ctx.drawImage(klineCanvas, 0, 50, 700, 300);
+      ctx.drawImage(klineCanvas, 0, 55, 700, 295);
 
       // Bottom panel - game results
       ctx.fillStyle = '#1a1a2e';
