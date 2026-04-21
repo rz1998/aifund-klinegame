@@ -41,10 +41,11 @@ function App() {
 
   const getMessage = (rate: number) => {
     const r = Math.round(rate * 100);
+    let result = MESSAGES[0];
     for (const m of MESSAGES) {
-      if (r >= m.min) return m;
+      if (r >= m.min) result = m;
     }
-    return MESSAGES[0];
+    return result;
   };
   const msg = getMessage(winRate);
 
