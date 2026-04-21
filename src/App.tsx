@@ -406,7 +406,7 @@ function App() {
 
             <div style={{ backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.border}`, padding: '15px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: COLORS.textMuted, fontFamily: '"Zpix", "Press Start 2P"' }}>当前战绩: {score}/{guessedCount}</div>
-              <div style={{ marginTop: '8px', fontSize: '12px', color: winRate >= 0.5 ? COLORS.error : COLORS.success, fontFamily: '"Zpix", "Press Start 2P"' }}>胜率: {guessedCount > 0 ? Math.round(score / guessedCount * 100) : 0}%</div>
+              <div style={{ marginTop: '8px', fontSize: '12px', color: winRate > 0.5 ? COLORS.error : COLORS.success, fontFamily: '"Zpix", "Press Start 2P"' }}>胜率: {guessedCount > 0 ? Math.round(score / guessedCount * 100) : 0}%</div>
             </div>
           </>
         )}
