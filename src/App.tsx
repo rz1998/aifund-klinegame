@@ -28,6 +28,29 @@ const MESSAGES = [
   { min: 100, message: '完美！你是量化之神！ 🏆🏆🏆' },
 ];
 
+const LOADING_TIPS = [
+  '正在回忆爆仓的痛苦...',
+  '正在加载翻倍的经验...',
+  '正在研究K线的奥秘...',
+  '正在召唤财运...',
+  '正在计算涨跌概率...',
+  '正在偷看主力动向...',
+  '正在学习割韭菜技术...',
+  '正在酝酿下一个涨停...',
+  '正在躲避回调...',
+  '正在追踪热点板块...',
+  '正在分析筹码分布...',
+  '正在等待最佳买点...',
+  '正在研究MACD金叉...',
+  '正在计算布林带收口...',
+  '正在观察成交量异动...',
+  '正在研究北向资金...',
+  '正在追踪游资席位...',
+  '正在学习打板技巧...',
+  '正在等待龙虎榜...',
+  '正在研究机构调研...',
+];
+
 function App() {
   const [fontsReady, setFontsReady] = useState(false);
   const [question, setQuestion] = useState<KlineGameResponse | null>(null);
@@ -36,8 +59,21 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isSharing, setIsSharing] = useState(false);
+  const [loadingTip, setLoadingTip] = useState(LOADING_TIPS[0]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestIdRef = useRef(0);
+
+  // Cycle through loading tips
+  useEffect(() => {
+    if (gameState !== 'loading') return;
+    const interval = setInterval(() => {
+      setLoadingTip((prev) => {
+        const idx = LOADING_TIPS.indexOf(prev);
+        return LOADING_TIPS[(idx + 1) % LOADING_TIPS.length];
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [gameState]);
 
   // Preload pixel font before anything else
   useEffect(() => {
@@ -433,7 +469,8 @@ function App() {
                 <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '60%', backgroundColor: COLORS.accent, animation: 'loadbar 1.5s ease-in-out infinite' }} />
               </div>
             </div>
-            <div style={{ fontSize: '12px', color: COLORS.accent, animation: 'blink 1s infinite', fontFamily: '"Zpix", "Press Start 2P"' }}>LOADING...</div>
+            <div style={{ fontSize: '10px', color: COLORS.accent, animation: 'blink 1s infinite', fontFamily: '"Zpix", "Press Start 2P"', marginBottom: '15px' }}>LOADING...</div>
+            <div style={{ fontSize: '9px', color: COLORS.textMuted, fontFamily: '"Zpix", "Press Start 2P"' }}>{loadingTip}</div>
           </div>
         )}
 
