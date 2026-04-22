@@ -311,12 +311,14 @@ function App() {
   const handleGuess = (pick: 'up' | 'down') => {
     if (!question || guessResults[currentIndex] !== null || gameState !== 'playing') return;
     // K6-K10 are at candles[5]-[9], currentIndex 0-4 maps to candles[5]-[9]
-    const c = question.candles[5 + currentIndex];
-    const actualUp = c.close >= c.open;
+    // Compare with previous candle's close (not current open/close) to avoid false signals
+    const currentCandle = question.candles[5 + currentIndex];
+    const prevCandle = question.candles[4 + currentIndex]; // K5, K6, K7, K8, K9 for each guess
+    const actualUp = currentCandle.close >= prevCandle.close;
     const correct = pick === (actualUp ? 'up' : 'down');
     const newResults = [...guessResults];
-    newResults[currentIndex] = { correct, up: pick === 'up', actualUp, price: c.close, open: c.open, high: c.high, low: c.low, close: c.close };
-    console.log('[DEBUG] handleGuess:', { pick, correct, currentIndex, guessedCount: guessResults.filter(r => r !== null).length });
+    newResults[currentIndex] = { correct, up: pick === 'up', actualUp, price: currentCandle.close, open: currentCandle.open, high: currentCandle.high, low: currentCandle.low, close: currentCandle.close, prevClose: prevCandle.close };
+    console.log('[DEBUG] handleGuess:', { pick, correct, currentIndex, prevClose: prevCandle.close, currentClose: currentCandle.close, guessedCount: guessResults.filter(r => r !== null).length });
     setGuessResults(newResults);
     if (correct) setScore((s) => s + 1);
     if (currentIndex < 4) {

@@ -37,6 +37,7 @@ export interface GuessResult {
   high: number;
   low: number;
   close: number;
+  prevClose: number; // previous candle's close for comparison
 }
 
 export const fetchRandomKline = async (retries = 3): Promise<KlineGameResponse> => {
