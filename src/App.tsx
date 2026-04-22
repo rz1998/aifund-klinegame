@@ -340,12 +340,12 @@ function App() {
       }
 
       // Layout constants
-      const marginX = 5;
+      const marginX = 2;
       const headerH = 35;
-      const chartW = 530;
+      const chartW = 536;
       const chartH = Math.round(chartW * (300 / 700)); // maintain 7:3 ratio
       const gap = 8;
-      const panelH = 180;
+      const panelH = 210;
       const totalW = 540;
 
       // Calculate total height
@@ -405,7 +405,7 @@ function App() {
 
       // QR Code
       const qrDataUrl = await QRCode.toDataURL('https://cewang.ai', {
-        width: 60 * scale,
+        width: 70 * scale,
         margin: 1,
         color: { dark: '#eaeaea', light: '#0f0f23' }
       });
@@ -414,12 +414,12 @@ function App() {
       await new Promise<void>((resolve) => {
         qrImg.onload = () => resolve();
       });
-      ctx.drawImage(qrImg, totalW / 2 - 30, panelY + 120, 60, 60);
+      ctx.drawImage(qrImg, totalW / 2 - 35, panelY + 115, 70, 70);
 
-      // QR label
-      ctx.fillStyle = '#8b8b9e';
-      ctx.font = '10px Zpix';
-      ctx.fillText('扫码挑战', totalW / 2, panelY + 195);
+      // QR tip
+      ctx.fillStyle = '#e94560';
+      ctx.font = '11px Zpix';
+      ctx.fillText('识别二维码开始股海沉浮', totalW / 2, panelY + 205);
 
       // Try Web Share API first (works better on mobile)
       const blob = await new Promise<Blob>((resolve) => {
