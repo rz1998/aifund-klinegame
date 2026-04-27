@@ -7,7 +7,20 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:mobile": "playwright test --project=Mobile Chrome",
+    "test:desktop": "playwright test --project=chromium",
+    "test:tablet": "playwright test --project=Tablet Chrome",
+    "test:api": "playwright test tests/api-mocks.spec.ts",
+    "test:responsive": "playwright test tests/responsive.spec.ts",
+    "test:game-flow": "playwright test tests/game-flow.spec.ts",
+    "test:debug": "playwright test --debug",
+    "test:codegen": "playwright codegen",
+    "test:report": "playwright show-report",
+    "test:install": "playwright install --with-deps"
   },
   "dependencies": {
     "axios": "^1.15.2",
@@ -17,6 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.59.1",
     "@types/node": "^24.12.2",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.2.14",
