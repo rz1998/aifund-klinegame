@@ -17,13 +17,14 @@ const COLORS = {
   flatColor: '#888888',
 };
 
-type GameState = 'loading' | 'playing' | 'finished' | 'error';
+// 响应式断点 (与 PRD 11.1 一致)
+const BREAKPOINT_MOBILE = 768;
+const BREAKPOINT_TABLET = 1024;
 
-// 响应式断点
-const BREAKPOINT = 768;
+type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 interface ResponsiveConfig {
-  isMobile: boolean;
+  deviceType: DeviceType;
   canvasWidth: number;
   canvasHeight: number;
   candleWidth: number;
@@ -35,14 +36,17 @@ interface ResponsiveConfig {
   klineLabelFontSize: number;
   padding: number;
   cardPadding: number;
+  cardRadius: number;
   buttonHeight: number;
   buttonGap: number;
+  buttonWidth: string;
+  buttonPadding: string;
 }
 
-function getResponsiveConfig(isMobile: boolean): ResponsiveConfig {
-  if (isMobile) {
+function getResponsiveConfig(deviceType: DeviceType): ResponsiveConfig {
+  if (deviceType === 'mobile') {
     return {
-      isMobile: true,
+      deviceType: 'mobile',
       canvasWidth: 340,
       canvasHeight: 200,
       candleWidth: 16,
@@ -54,12 +58,37 @@ function getResponsiveConfig(isMobile: boolean): ResponsiveConfig {
       klineLabelFontSize: 6,
       padding: 12,
       cardPadding: 16,
+      cardRadius: 4,
       buttonHeight: 56,
       buttonGap: 16,
+      buttonWidth: '48%',
+      buttonPadding: '16px 24px',
     };
   }
+  if (deviceType === 'tablet') {
+    return {
+      deviceType: 'tablet',
+      canvasWidth: 560,
+      canvasHeight: 240,
+      candleWidth: 20,
+      candleGap: 6,
+      headerFontSize: 14,
+      bodyFontSize: 11,
+      buttonFontSize: 11,
+      labelFontSize: 10,
+      klineLabelFontSize: 7,
+      padding: 20,
+      cardPadding: 20,
+      cardRadius: 6,
+      buttonHeight: 52,
+      buttonGap: 20,
+      buttonWidth: '180px',
+      buttonPadding: '14px 20px',
+    };
+  }
+  // desktop
   return {
-    isMobile: false,
+    deviceType: 'desktop',
     canvasWidth: 700,
     canvasHeight: 300,
     candleWidth: 24,
@@ -71,10 +100,15 @@ function getResponsiveConfig(isMobile: boolean): ResponsiveConfig {
     klineLabelFontSize: 8,
     padding: 24,
     cardPadding: 24,
+    cardRadius: 8,
     buttonHeight: 48,
     buttonGap: 24,
+    buttonWidth: '200px',
+    buttonPadding: '12px 20px',
   };
 }
+
+type GameState = 'loading' | 'playing' | 'finished' | 'error';
 
 const MESSAGES = [
   { min: 0, message: '全军覆没...要不要再来一局？ 😢' },
@@ -121,8 +155,14 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestIdRef = useRef(0);
 
-  const isMobile = windowWidth < BREAKPOINT;
-  const cfg = getResponsiveConfig(isMobile);
+  const getDeviceType = (width: number): DeviceType => {
+    if (width < BREAKPOINT_MOBILE) return 'mobile';
+    if (width < BREAKPOINT_TABLET) return 'tablet';
+    return 'desktop';
+  };
+
+  const deviceType = getDeviceType(windowWidth);
+  const cfg = getResponsiveConfig(deviceType);
 
   // 监听窗口大小变化
   useEffect(() => {
@@ -153,7 +193,7 @@ function App() {
         setFontsReady(true);
       } catch (e) {
         console.error('Font load failed:', e);
-        setFontsReady(true); // Continue anyway
+        setFontsReady(true);
       }
     };
     loadFont();
@@ -186,20 +226,18 @@ function App() {
       canvas.height = height;
       ctx.clearRect(0, 0, width, height);
 
-      // Background
       ctx.fillStyle = COLORS.background;
       ctx.fillRect(0, 0, width, height);
 
       const upColor = COLORS.upColor;
       const downColor = COLORS.downColor;
       const totalCandleWidth = candleWidth + candleGap;
-      const chartHeight = height - 60;
-      const chartTop = 30;
+      const chartHeight = height - 50;
+      const chartTop = 25;
       const totalCandles = 10;
       const chartContentWidth = totalCandles * totalCandleWidth;
       const startX = (width - chartContentWidth) / 2;
 
-      // 价格范围基于所有已揭示的K线（K1-K5已知 + 已猜测的K6-K10）
       const prices: number[] = [];
       for (let i = 0; i < 5; i++) {
         const c = q.candles[i];
@@ -234,7 +272,7 @@ function App() {
       for (let i = 0; i <= 4; i++) {
         const price = minPrice + (priceRange / 4) * (4 - i);
         const y = chartTop + (chartHeight / 4) * i;
-        ctx.fillText(price.toFixed(2), startX - 10, y + 4);
+        ctx.fillText(price.toFixed(2), startX - 8, y + 4);
       }
 
       // Draw all 10 candle positions
@@ -242,12 +280,10 @@ function App() {
         const x = startX + i * totalCandleWidth + candleWidth / 2;
 
         if (i < 5) {
-          // K1-K5: 已知K线
           const c = q.candles[i];
           const isUp = c.close >= c.open;
           const color = isUp ? upColor : downColor;
 
-          // Wick
           ctx.strokeStyle = color;
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -255,29 +291,24 @@ function App() {
           ctx.lineTo(x, priceToY(c.low));
           ctx.stroke();
 
-          // Body
           const bodyTop = priceToY(Math.max(c.open, c.close));
           const bodyHeight = Math.max(1, Math.abs(priceToY(c.open) - priceToY(c.close)));
           ctx.fillStyle = color;
           ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
 
-          // K label
           ctx.fillStyle = COLORS.text;
           ctx.font = `${cfg.klineLabelFontSize}px "Press Start 2P"`;
           ctx.textAlign = 'center';
-          ctx.fillText(`K${i + 1}`, x, height - 10);
+          ctx.fillText(`K${i + 1}`, x, height - 8);
 
         } else {
-          // K6-K10: 待猜位置
           const guessedIndex = i - 5;
 
           if (guessedIndex < guessedCount) {
-            // 已猜测：显示结果K线 + ✓/✗
             const c = q.candles[i];
             const isUp = c.close >= c.open;
             const color = isUp ? upColor : downColor;
 
-            // Wick
             ctx.strokeStyle = color;
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -285,37 +316,32 @@ function App() {
             ctx.lineTo(x, priceToY(c.low));
             ctx.stroke();
 
-            // Body
             const bodyTop = priceToY(Math.max(c.open, c.close));
             const bodyHeight = Math.max(1, Math.abs(priceToY(c.open) - priceToY(c.close)));
             ctx.fillStyle = color;
             ctx.fillRect(x - candleWidth / 2, bodyTop, candleWidth, bodyHeight);
 
-            // K label
             ctx.fillStyle = COLORS.text;
             ctx.font = `${cfg.klineLabelFontSize}px "Press Start 2P"`;
             ctx.textAlign = 'center';
-            ctx.fillText(`K${i + 1}`, x, height - 10);
+            ctx.fillText(`K${i + 1}`, x, height - 8);
 
-            // Guess result marker
             if (guessed[guessedIndex]) {
               const result = guessed[guessedIndex]!;
               ctx.fillStyle = result.correct ? COLORS.success : COLORS.error;
               ctx.font = `${cfg.klineLabelFontSize + 2}px "Press Start 2P"`;
-              ctx.fillText(result.correct ? '✓' : '✗', x, chartTop - 8);
+              ctx.fillText(result.correct ? '✓' : '✗', x, chartTop - 6);
             }
           } else {
-            // 未猜测：显示问号
             ctx.fillStyle = COLORS.textMuted;
             ctx.font = `${cfg.klineLabelFontSize + 6}px "Press Start 2P"`;
             ctx.textAlign = 'center';
             ctx.fillText('?', x, chartTop + chartHeight / 2 + 4);
 
-            // K label
             ctx.fillStyle = COLORS.textMuted;
             ctx.font = `${cfg.klineLabelFontSize}px "Press Start 2P"`;
             ctx.textAlign = 'center';
-            ctx.fillText(`K${i + 1}`, x, height - 10);
+            ctx.fillText(`K${i + 1}`, x, height - 8);
           }
         }
       }
@@ -339,7 +365,6 @@ function App() {
     }
   }, [question, gameState, guessResults, drawKline]);
 
-  // Redraw canvas when page becomes visible again (tab switch fix)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && question && (gameState === 'playing' || gameState === 'finished')) {
@@ -364,7 +389,6 @@ function App() {
     }
   }, []);
 
-  // Load question once fonts are ready
   useEffect(() => {
     if (fontsReady) {
       loadQuestion();
@@ -392,7 +416,6 @@ function App() {
     if (!question || !canvasRef.current || isSharing) return;
     setIsSharing(true);
     try {
-      // Use existing font or load if needed
       let fontLoaded = document.fonts.check('12px Zpix');
       if (!fontLoaded) {
         const pixelFont = new FontFace('Zpix', 'url(/fonts/zpix.ttf)');
@@ -401,7 +424,6 @@ function App() {
         fontLoaded = true;
       }
 
-      // Layout constants - 固定分享图尺寸
       const marginX = 2;
       const headerH = 35;
       const chartW = 536;
@@ -409,7 +431,6 @@ function App() {
       const gap = 8;
       const panelH = 210;
       const totalW = 540;
-
       const totalH = headerH + gap + chartH + gap + panelH;
 
       const scale = 2;
@@ -498,13 +519,16 @@ function App() {
     }
   };
 
-  // 动态样式
+  const isMobile = deviceType === 'mobile';
+  const isDesktop = deviceType === 'desktop';
+
   const styles = {
     container: {
       minHeight: '100vh',
       backgroundColor: COLORS.background,
       color: COLORS.text,
       fontFamily: '"Zpix", "Press Start 2P", monospace',
+      overflowX: 'hidden' as const,
     },
     header: {
       padding: `${cfg.padding}px`,
@@ -521,12 +545,13 @@ function App() {
     },
     main: {
       padding: `${cfg.padding}px`,
-      maxWidth: isMobile ? '100%' : '800px',
+      maxWidth: isMobile ? '100%' : isDesktop ? '800px' : '700px',
       margin: '0 auto',
     },
     card: {
       backgroundColor: COLORS.cardBg,
       border: `2px solid ${COLORS.border}`,
+      borderRadius: `${cfg.cardRadius}px`,
       padding: `${cfg.cardPadding}px`,
       marginBottom: `${cfg.padding}px`,
       textAlign: 'center' as const,
@@ -534,6 +559,7 @@ function App() {
     cardAccent: {
       backgroundColor: COLORS.cardBg,
       border: `3px solid ${COLORS.accent}`,
+      borderRadius: `${cfg.cardRadius + 2}px`,
       padding: `${cfg.cardPadding}px`,
       textAlign: 'center' as const,
       marginBottom: `${cfg.padding}px`,
@@ -542,6 +568,7 @@ function App() {
     canvasContainer: {
       backgroundColor: COLORS.background,
       padding: isMobile ? '6px' : '10px',
+      borderRadius: `${cfg.cardRadius}px`,
       marginBottom: `${cfg.padding}px`,
     },
     canvas: {
@@ -554,55 +581,56 @@ function App() {
     },
     buttonGroup: {
       display: 'flex',
+      flexWrap: 'wrap' as const,
       gap: `${cfg.buttonGap}px`,
-      justifyContent: 'center',
+      justifyContent: isMobile ? 'space-between' : 'center',
       marginBottom: `${cfg.padding}px`,
     },
     guessButton: {
-      flex: isMobile ? 1 : 0,
-      maxWidth: isMobile ? '48%' : '200px',
+      width: isMobile ? '48%' : cfg.buttonWidth,
       height: `${cfg.buttonHeight}px`,
-      padding: `${isMobile ? 16 : 12}px ${isMobile ? 20 : 16}px`,
+      padding: cfg.buttonPadding,
       fontSize: `${cfg.buttonFontSize}px`,
       fontFamily: '"Zpix", "Press Start 2P"',
       backgroundColor: '#330000',
       border: `3px solid ${COLORS.upColor}`,
+      borderRadius: `${cfg.cardRadius}px`,
       color: COLORS.upColor,
       cursor: 'pointer',
       boxShadow: `0 0 15px ${COLORS.upColor}40`,
     },
     guessButtonDown: {
-      flex: isMobile ? 1 : 0,
-      maxWidth: isMobile ? '48%' : '200px',
+      width: isMobile ? '48%' : cfg.buttonWidth,
       height: `${cfg.buttonHeight}px`,
-      padding: `${isMobile ? 16 : 12}px ${isMobile ? 20 : 16}px`,
+      padding: cfg.buttonPadding,
       fontSize: `${cfg.buttonFontSize}px`,
       fontFamily: '"Zpix", "Press Start 2P"',
       backgroundColor: '#003300',
       border: `3px solid ${COLORS.downColor}`,
+      borderRadius: `${cfg.cardRadius}px`,
       color: COLORS.downColor,
       cursor: 'pointer',
       boxShadow: `0 0 15px ${COLORS.downColor}40`,
     },
     actionButton: {
-      flex: 1,
-      maxWidth: '200px',
-      padding: `${isMobile ? 16 : 15}px`,
+      width: isMobile ? '48%' : cfg.buttonWidth,
+      padding: cfg.buttonPadding,
       fontSize: `${cfg.bodyFontSize}px`,
       fontFamily: '"Zpix", "Press Start 2P"',
       backgroundColor: COLORS.accent,
       border: `3px solid ${COLORS.accent}`,
+      borderRadius: `${cfg.cardRadius}px`,
       color: COLORS.text,
       cursor: 'pointer',
     },
     actionButtonOutline: {
-      flex: 1,
-      maxWidth: '200px',
-      padding: `${isMobile ? 16 : 15}px`,
+      width: isMobile ? '48%' : cfg.buttonWidth,
+      padding: cfg.buttonPadding,
       fontSize: `${cfg.bodyFontSize}px`,
       fontFamily: '"Zpix", "Press Start 2P"',
       backgroundColor: 'transparent',
       border: `3px solid ${COLORS.textMuted}`,
+      borderRadius: `${cfg.cardRadius}px`,
       color: COLORS.text,
       cursor: 'pointer',
     },
@@ -612,7 +640,7 @@ function App() {
       fontFamily: '"Zpix", "Press Start 2P"',
     },
     textAccent: {
-      fontSize: `${cfg.headerFontSize}px`,
+      fontSize: `${cfg.headerFontSize + 2}px`,
       color: COLORS.accent,
       fontFamily: '"Zpix", "Press Start 2P"',
     },
@@ -628,9 +656,19 @@ function App() {
       fontFamily: '"Zpix", "Press Start 2P"',
     },
     questionText: {
-      fontSize: `${cfg.bodyFontSize}px`,
+      fontSize: `${cfg.bodyFontSize + 2}px`,
       color: COLORS.accent,
       fontFamily: '"Zpix", "Press Start 2P"',
+    },
+    loadingBar: {
+      width: isMobile ? '160px' : '200px',
+      height: '12px',
+      backgroundColor: COLORS.cardBg,
+      border: `2px solid ${COLORS.border}`,
+      borderRadius: `${cfg.cardRadius}px`,
+      margin: '0 auto',
+      position: 'relative' as const,
+      overflow: 'hidden',
     },
   };
 
@@ -644,7 +682,7 @@ function App() {
         {gameState === 'loading' && (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ width: isMobile ? '160px' : '200px', height: '12px', backgroundColor: COLORS.cardBg, border: `2px solid ${COLORS.border}`, margin: '0 auto', position: 'relative', overflow: 'hidden' }}>
+              <div style={styles.loadingBar}>
                 <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '60%', backgroundColor: COLORS.accent, animation: 'loadbar 1.5s ease-in-out infinite' }} />
               </div>
             </div>
@@ -656,7 +694,7 @@ function App() {
         {gameState === 'error' && (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
             <div style={{ fontSize: `${cfg.bodyFontSize}px`, color: COLORS.error, animation: 'blink 1s infinite', fontFamily: '"Zpix", "Press Start 2P"', marginBottom: '20px' }}>加载失败，请检查网络后重试</div>
-            <button onClick={loadQuestion} style={{ ...styles.actionButton, maxWidth: 'none' }}>重新加载</button>
+            <button onClick={loadQuestion} style={{ ...styles.actionButton, width: isMobile ? '60%' : 'auto' }}>重新加载</button>
           </div>
         )}
 
@@ -700,7 +738,7 @@ function App() {
                 您的战绩: {score}/5 ({(winRate * 100).toFixed(0)}%)
               </div>
 
-              <div style={{ fontSize: `${cfg.bodyFontSize}px`, padding: '15px', backgroundColor: COLORS.background, border: `2px solid ${COLORS.border}`, fontFamily: '"Zpix", "Press Start 2P"' }}>{msg.message}</div>
+              <div style={{ fontSize: `${cfg.bodyFontSize}px`, padding: '15px', backgroundColor: COLORS.background, border: `2px solid ${COLORS.border}`, borderRadius: `${cfg.cardRadius}px`, fontFamily: '"Zpix", "Press Start 2P"' }}>{msg.message}</div>
             </div>
 
             <div style={styles.buttonGroup}>
@@ -723,15 +761,13 @@ function App() {
           51%, 100% { opacity: 0.3; }
         }
         * { box-sizing: border-box; }
+        body { margin: 0; }
         button:hover { opacity: 0.9; }
         button:active { transform: scale(0.98); }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        body { margin: 0; }
-        /* 禁用移动端hover */
         @media (hover: none) {
           button:hover { opacity: 1; }
         }
-        /* 触摸优化 - 防止长按弹出菜单 */
         button {
           -webkit-touch-callout: none;
           -webkit-user-select: none;
