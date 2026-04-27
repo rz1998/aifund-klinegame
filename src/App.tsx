@@ -395,7 +395,7 @@ function App() {
     }
   }, [fontsReady, loadQuestion]);
 
-  const handleGuess = (pick: 'up' | 'down') => {
+  const handleGuess = useCallback((pick: 'up' | 'down') => {
     if (!question || guessResults[currentIndex] !== null || gameState !== 'playing') return;
     const currentCandle = question.candles[5 + currentIndex];
     const prevCandle = question.candles[4 + currentIndex];
@@ -410,9 +410,9 @@ function App() {
     } else {
       setGameState('finished');
     }
-  };
+  }, [question, guessResults, currentIndex, gameState]);
 
-  const handleShare = async () => {
+  const handleShare = useCallback(async () => {
     if (!question || !canvasRef.current || isSharing) return;
     setIsSharing(true);
     try {
@@ -517,7 +517,7 @@ function App() {
         console.error('Share failed:', err);
       }
     }
-  };
+  }, [question, isSharing, score, winRate, msg]);
 
   const isMobile = deviceType === 'mobile';
   const isDesktop = deviceType === 'desktop';
