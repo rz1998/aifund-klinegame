@@ -12,7 +12,7 @@ const apiClient = axios.create({
 // 请求拦截器：添加API Key
 apiClient.interceptors.request.use((config) => {
   if (API_KEY) {
-    config.headers['X-API-Key'] = API_KEY;
+    config.headers.set('X-API-Key', API_KEY);
   }
   return config;
 });
