@@ -1,0 +1,33 @@
+# aifund-klinegame 前端服务
+# 使用方式: docker compose -f docker-compose.yml -f docker-compose.klinegame.yml up -d
+# 依赖: marketdata 后端 (端口 8086)
+
+services:
+  # aifund-klinegame Web
+  klinegame-web:
+    build:
+      context: ../aifund-klinegame
+      dockerfile: Dockerfile
+    image: aifund-klinegame-web:latest
+    container_name: aifund-klinegame-web
+    networks:
+      - unified
+    ports:
+      - "8087:80"
+    environment:
+      - VITE_API_BASE_URL=/api/v1
+      - VITE_API_KEY=${KLINEGAME_API_KEY:-}
+    depends_on:
+      - marketdata
+    networks:
+      - ai-fund_unified
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  ai-fund_unified:
+    external: true

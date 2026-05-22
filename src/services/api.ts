@@ -1,15 +1,19 @@
 import axios from 'axios';
 
-const API_BASE = '/api/v1';
-const API_KEY = 'ak_17c0fc2357df41348aee3c4c61a1dc1c';
+// API配置
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 const apiClient = axios.create({
   baseURL: API_BASE,
   timeout: 10000,
 });
 
+// 请求拦截器：添加API Key
 apiClient.interceptors.request.use((config) => {
-  config.headers['X-API-Key'] = API_KEY;
+  if (API_KEY) {
+    config.headers['X-API-Key'] = API_KEY;
+  }
   return config;
 });
 
