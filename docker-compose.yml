@@ -14,7 +14,7 @@ services:
     image: aifund-klinegame-web:latest
     container_name: aifund-klinegame-web
     ports:
-      - "8087:80"
+      - "8085:80"
     networks:
       - ai-fund_unified
     restart: unless-stopped
