@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# aifund-klinegame
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+K线游戏前端 - 对接 aifund-marketdata 数据源
 
-Currently, two official plugins are available:
+## 简介
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+K线游戏是一个通过K线形态猜测股票涨跌的训练应用。
 
-## React Compiler
+## 技术栈
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript
+- Vite 5
+- Axios
+- QRCode
 
-## Expanding the ESLint configuration
+## 环境变量
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| VITE_API_BASE_URL | API 基础路径 | /api/v1 |
+| VITE_API_KEY | API Key | (空) |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 开发
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 构建
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build
 ```
+
+## 部署
+
+使用 Docker:
+
+```bash
+docker build -t aifund-klinegame-web:latest .
+docker run -d -p 8087:80 \
+  --network ai-fund_unified \
+  -e VITE_API_BASE_URL=/api/v1 \
+  -e VITE_API_KEY=your_api_key \
+  aifund-klinegame-web:latest
+```
+
+## API 端点
+
+- `GET /api/v1/kline-game/random` - 获取随机K线数据
+
+## 访问地址
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | http://localhost:8087 |
+| API (marketdata) | http://localhost:8086 |
