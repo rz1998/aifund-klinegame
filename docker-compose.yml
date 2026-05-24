@@ -19,7 +19,7 @@ services:
       - ai-fund_unified
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
